@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriGuard AI | Advanced Plant Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+        .drop-zone { border: 2px dashed #e2e8f0; transition: all 0.4s ease; }
+        .drop-zone.active { border-color: #10b981; background: #f0fdf4; transform: scale(1.01); }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .blob { position: absolute; width: 500px; height: 500px; background: #10b981; filter: blur(80px); opacity: 0.07; z-index: -1; border-radius: 50%; }
+        #llm-advisory-content ul { list-style-type: disc; padding-left: 1.25rem; color: inherit; }
+        #llm-advisory-content li { margin-bottom: 0.5rem; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen relative overflow-x-hidden">
+    <div class="blob -top-24 -left-24"></div>
+    <div class="blob top-1/2 -right-24"></div>
+
+        <div class="container mx-auto px-4 py-5">
+            <nav class="flex items-center justify-between mb-12">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-green-600 p-2 rounded-xl shadow-lg shadow-green-200">
+                        <i class="fas fa-leaf text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-extrabold text-slate-800 tracking-tight">AgriGuard <span class="text-green-600">AI</span></span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6 text-sm font-bold text-slate-500">
+                    <button class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-black transition shadow-xl shadow-slate-200">                <a href="#system-info" class="hover:text-green-600 transition">How it Works</a>
+    </button>
+            </div>
+        </nav>
+
+        <main class="max-w-6xl mx-auto">
+            <section id="analysis-box" class="mb-20">
+                <div id="upload-section" class="fade-in">
+                    <div class="text-center mb-10">
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Detect Disease. <span class="text-green-600 underline decoration-green-100 underline-offset-8">Save Crops.</span></h1>
+                        <p class="text-slate-500 text-lg max-w-xl mx-auto">Upload a leaf photo for instant neural-network diagnostics and expert treatment protocols.</p>
+                    </div>
+
+                    <div class="glass border border-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200/50">
+                        <div id="drop-zone" class="drop-zone p-12 md:p-20 rounded-[2rem] text-center cursor-pointer bg-slate-50/50 hover:bg-white transition-all">
+                            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-green-600"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-800 mb-2">Identify your plant issue</h2>
+                            <p class="text-slate-500 mb-8">Drag & drop image here or click to browse files</p>
+                            <input type="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png">
+                            <button id="upload-trigger-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-12 rounded-2xl transition shadow-xl shadow-green-200 active:scale-95">
+                                Start Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loading-section" class="hidden text-center py-24 fade-in">
+                    <div class="inline-flex relative mb-6">
+                        <div class="h-20 w-20 rounded-full border-4 border-slate-100 border-t-green-600 animate-spin"></div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800">Analyzing Biomarkers</h3>
+                    <p class="text-slate-500">Comparing patterns against 54,000+ datasets...</p>
+                </div>
+
+                <div id="results-section" class="hidden fade-in space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <button id="analyze-another-btn" class="flex items-center text-slate-500 font-bold hover:text-green-600 transition">
+                            <i class="fas fa-arrow-left mr-2"></i> New Diagnosis
+                        </button>
+                        <div id="health-badge" class="px-6 py-2 rounded-2xl flex items-center shadow-sm bg-white border border-slate-100">
+                            <i id="health-status-icon" class="mr-3 text-lg"></i>
+                            <span id="health-status" class="font-extrabold uppercase tracking-widest text-sm"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div class="lg:col-span-4 space-y-6">
+                            <div class="glass rounded-[2rem] shadow-xl border border-white overflow-hidden sticky top-8 p-0">
+                                <img id="preview-image" class="w-full h-72 object-cover">
+                                <div class="p-8 space-y-6">
+                                    <h3 id="disease-name" class="text-2xl font-extrabold text-slate-900 leading-tight capitalize"></h3>
+                                    
+                                    <div>
+                                        <div class="flex justify-between mb-2">
+                                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
+                                            <span id="confidence-text" class="text-xs font-black text-green-600"></span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                            <div id="confidence-bar" class="h-2.5 rounded-full bg-green-500 transition-all duration-1000"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-6 border-t border-slate-100">
+                                       
+                                        <div class="h-44">
+                                            <canvas id="confidenceChart"></canvas>
+                                        </div>
+                                    </div>
+
+                         
+                                   
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">Other Possibilites</h4>
+    
+
+                                    <div id="top-predictions-container" class="space-y-2 pt-4 border-t border-slate-100"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="llm-advisory-content" class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2 bg-slate-900 rounded-[2rem] p-10 text-white relative overflow-hidden shadow-2xl">
+                                <i class="fas fa-robot absolute -bottom-6 -right-6 text-slate-800 text-9xl opacity-40"></i>
+                                <h5 class="text-green-400 font-black uppercase tracking-widest text-[10px] mb-4">Expert AI Diagnosis</h5>
+                                <p id="section-explanation" class="text-xl leading-relaxed relative z-10 font-medium opacity-95"></p>
+                            </div>
+                            
+                            <div class="bg-white rounded-[1.5rem] p-8 border border-slate-100 shadow-sm">
+                                <h5 class="font-black text-orange-600 mb-4 uppercase tracking-wider text-xs flex items-center">
+                                    <i class="fas fa-bolt mr-2"></i> Immediate Actions
+                                </h5>
+                                
+                                <p id="section-actions" class="text-slate-600 text-sm leading-relaxed mt-4"></p>
+                            </div>
+
+                            <div class="bg-white rounded-[1.5rem] p-8 border border-slate-100 shadow-sm">
+                                <h5 class="font-black text-blue-600 mb-4 uppercase tracking-wider text-xs flex items-center">
+                                    <i class="fas fa-shield-alt mr-2"></i> Prevention
+                                </h5>
+                                
+                                <p id="section-prevention" class="text-slate-600 text-sm leading-relaxed mt-4"></p>
+                            </div>
+
+                            <div class="bg-emerald-50 rounded-[1.5rem] p-8 border border-emerald-100">
+                                <h5 class="font-bold text-emerald-900 mb-3 flex items-center uppercase tracking-widest text-[10px]">Organic Treatment</h5>
+                                <p id="section-organic" class="text-emerald-800 text-sm leading-relaxed"></p>
+                            </div>
+
+                            <div class="bg-rose-50 rounded-[1.5rem] p-8 border border-rose-100">
+                                <h5 class="font-bold text-rose-900 mb-3 flex items-center uppercase tracking-widest text-[10px]">Chemical Treatment</h5>
+                                <p id="section-chemical" class="text-rose-800 text-sm leading-relaxed"></p>
+                            </div>
+
+                            <div class="md:col-span-2 bg-slate-100 p-6 rounded-[1.5rem]">
+                                <p id="section-disclaimer" class="text-[10px] text-slate-500 italic leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+<!-- Fallback icons for any unavailable ones -->
+<section class="mt-24 mb-16 fade-in px-4">
+    <div class="text-center mb-12">
+        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Extensive Species Coverage</h2>
+        <p class="text-slate-500 mt-2 max-w-2xl mx-auto">Our AI identifies health patterns across 14 major crop species with precision neural analysis.</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-6">
+        
+        <!-- Apple -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-apple-alt text-red-500 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Apple</p>
+        </div>
+
+        <!-- Blueberry -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-circle text-blue-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Blueberry</p>
+        </div>
+
+        <!-- Cherry -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-seedling text-rose-500 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Cherry</p>
+        </div>
+
+        <!-- Corn -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-wheat-awn text-yellow-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Corn</p>
+        </div>
+
+        <!-- Grape -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-wine-bottle text-purple-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Grape</p>
+        </div>
+
+        <!-- Orange -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-lemon text-orange-500 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Orange</p>
+        </div>
+
+        <!-- Peach -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-apple-alt text-orange-400 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Peach</p>
+        </div>
+
+        <!-- Pepper -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-pepper-hot text-green-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Pepper</p>
+        </div>
+
+        <!-- Potato -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-circle text-amber-900 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Potato</p>
+        </div>
+
+        <!-- Raspberry -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-heart text-red-500 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Raspberry</p>
+        </div>
+
+        <!-- Soybean -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-leaf text-emerald-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Soybean</p>
+        </div>
+
+        <!-- Squash -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-circle text-yellow-700 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Squash</p>
+        </div>
+
+        <!-- Strawberry -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-heart text-rose-500 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Strawberry</p>
+        </div>
+
+        <!-- Tomato -->
+        <div class="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center hover:border-green-500 hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-circle text-red-600 text-2xl"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Tomato</p>
+        </div>
+    </div>
+</section>
+            <section id="system-info" class="mt-32 pt-20 border-t border-slate-200">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-extrabold text-slate-900">System Architecture</h2>
+                    <p class="text-slate-500 mt-3 max-w-lg mx-auto">How our dual-engine AI provides precision diagnostics and treatment plans.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8">
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 text-blue-600 p-4 rounded-2xl mr-5 shadow-sm">
+                                <i class="fas fa-network-wired text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 mb-1">CNN Classification Engine</h4>
+                                <p class="text-slate-500 leading-relaxed mb-4">A specialized Convolutional Neural Network trained on the PlantVillage dataset, capable of identifying subtle pathogenic patterns in leaf pixels.</p>
+                                
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-emerald-100 text-emerald-600 p-4 rounded-2xl mr-5 shadow-sm">
+                                <i class="fas fa-brain text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-slate-800 mb-1">LLaMA 3.3 Knowledge Base</h4>
+                                <p class="text-slate-500 leading-relaxed">Integrates LLaMA 3.3 70B intelligence to synthesize raw detection data into farmer-friendly organic and chemical treatment plans.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-10">
+                            <i class="fas fa-chart-line text-9xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-8 flex items-center">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full mr-3 animate-pulse"></span>
+                            Benchmark Performance
+                        </h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Detection Accuracy</div>
+                                <div class="text-4xl font-black text-emerald-400">98.0%</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Species Coverage</div>
+                                <div class="text-4xl font-black text-white">38 Classes</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Processing Latency</div>
+                                <div class="text-4xl font-black text-blue-400">&lt; 0.5s</div>
+                            </div>
+                        </div>
+                        <p class="mt-10 text-[10px] text-slate-500 italic font-medium tracking-wide">Performance validated against the PlantVillage global open dataset.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-32 pb-12 text-center text-slate-400 text-xs font-medium border-t border-slate-100 pt-12">
+            <p>&copy; 2026 AgriGuard AI Diagnostics. Powered by LLaMA 3 & Computer Vision.</p>
+        </footer>
+    </div>
+
+    <div id="error-section" class="hidden fixed bottom-8 right-8 bg-red-600 text-white p-5 rounded-2xl shadow-2xl flex items-center z-50 fade-in">
+        <i class="fas fa-exclamation-circle text-xl mr-3"></i>
+        <div>
+            <p class="font-bold text-sm">System Error</p>
+            <p id="error-message" class="text-xs opacity-90"></p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

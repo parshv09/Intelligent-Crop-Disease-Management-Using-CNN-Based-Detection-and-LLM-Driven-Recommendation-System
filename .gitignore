@@ -1,0 +1,67 @@
+# =========================
+# 🔐 Environment Variables
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# 🐍 Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+*.so
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# =========================
+# 📦 Distribution / Build
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =========================
+# 🧠 TensorFlow / Model Files
+# (Optional – remove if you want to upload model)
+# =========================
+*.h5
+*.keras
+*.ckpt
+*.pb
+*.weights
+
+# =========================
+# 🗂 Uploads Folder
+# =========================
+static/uploads/
+
+# =========================
+# 📝 Logs
+# =========================
+*.log
+
+# =========================
+# 🖥 OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 🧪 Jupyter Notebooks
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# 🚀 Deployment
+# =========================
+instance/
+.webassets-cache
