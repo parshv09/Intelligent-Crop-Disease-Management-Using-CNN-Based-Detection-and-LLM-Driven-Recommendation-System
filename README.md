@@ -1,0 +1,1 @@
+# Intelligent-Crop-Disease-Management-Using-CNN-Based-Detection-and-LLM-Driven-Recommendation-System
